@@ -1,0 +1,23 @@
+SELECT T1."TBL_NAME", U.*, U1."COLUMNS", U1."COLUMNSTYPE", U2."PARTS"
+  FROM (SELECT T."TBL_ID",
+               group_concat(P."PKEY_NAME") AS "PKEYNAMES",
+               group_concat(P."PKEY_TYPE") AS "PKEYTYPES"
+          FROM "TBLS" T LEFT JOIN "PARTITION_KEYS" P
+         ON( T."TBL_ID" = P."TBL_ID")
+         GROUP BY T."TBL_ID") U,
+       (SELECT group_concat(V."COLUMN_NAME") AS "COLUMNS",
+               group_concat(V."TYPE_NAME") AS "COLUMNSTYPE",
+               T."TBL_ID"
+          FROM "COLUMNS_V2" V, "CDS" C, "SDS" S, "TBLS" T
+         WHERE V."CD_ID" = C."CD_ID"
+           AND C."CD_ID" = S."CD_ID"
+           AND S."SD_ID" = T."SD_ID"
+         GROUP BY T."TBL_ID") U1,
+       (SELECT T."TBL_ID", GROUP_CONCAT(P."PART_NAME") AS "PARTS"
+          FROM "TBLS" T LEFT JOIN "PARTITIONS" P
+					ON(T."TBL_ID" = P."TBL_ID")
+         GROUP BY T."TBL_ID") U2,
+       "TBLS" T1
+ WHERE U."TBL_ID" = U1."TBL_ID"
+   AND U."TBL_ID" = T1."TBL_ID"
+   AND T1."TBL_ID" = U2."TBL_ID"
